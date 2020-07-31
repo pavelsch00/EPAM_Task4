@@ -14,7 +14,7 @@ namespace Client
 
         public SocketClient()
         {
-            IpHost = Dns.GetHostEntry("localhost");
+            IpHost = Dns.GetHostEntry(_localhost);
             IpAddr = IpHost.AddressList[0];
             IpEndPoint = new IPEndPoint(IpAddr, _port);
             TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -28,29 +28,36 @@ namespace Client
 
         private IPEndPoint IpEndPoint { get; set; }
 
+        public bool SendMessage(string message)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
+
+            if (!(message == string.Empty))
+            {
+                TcpSocket.Send(buffer);
+                return true;
+            }
+            else
+            {
+                TcpSocket.Send(Encoding.UTF8.GetBytes("Error!"));
+                TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                return false;
+            }
+        }
+
         public void SendMessageFromSocket()
         {
-            byte[] bytes = new byte[1024];
-            int bytesRec = 0;
-
             while (true)
             {
                 TcpSocket.Connect(IpEndPoint);
                 Console.Write("Input message: ");
                 var message = Console.ReadLine();
-
-                byte[] buffer = Encoding.UTF8.GetBytes(message);
-
-                if (!(message == string.Empty))
-                    TcpSocket.Send(buffer);
-                else
-                {
-                    TcpSocket.Send(Encoding.UTF8.GetBytes("Error!"));
-                    TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+               
+                if(!SendMessage(message))
                     continue;
-                }
-
-                bytesRec = TcpSocket.Receive(bytes);
+                    
+                var bytes = new byte[1024];
+                int bytesRec = TcpSocket.Receive(bytes);
 
                 Console.WriteLine("Server response: {0}\n", Encoding.UTF8.GetString(bytes, 0, bytesRec));
 
