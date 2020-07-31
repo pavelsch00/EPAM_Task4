@@ -11,8 +11,6 @@ namespace Server
 
         private const int _port = 11000;
 
-        public Action<string> TranslatedMessage;
-
         public SocketServer()
         {
             IpHost = Dns.GetHostEntry(_localhost);
@@ -35,20 +33,30 @@ namespace Server
         {
             TcpSocket.Bind(IpEndPoint);
             TcpSocket.Listen(100);
-            while (true)
-            {
-                socket = TcpSocket.Accept();
 
-                string message = ReceivingMessage();
+            socket = TcpSocket.Accept();
 
-                SendMessage(message);
+            string message = ReceivingMessage();
 
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-            }
+            SendMessage(message);
+
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
 
-        public string ReceivingMessage()
+        public void StartServer(string message)
+        {
+            TcpSocket.Bind(IpEndPoint);
+            TcpSocket.Listen(100);
+            socket = TcpSocket.Accept();
+
+            SendMessage(message);
+
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
+        }
+
+        private string ReceivingMessage()
         {
             var bytesArray = new byte[1024];
 
@@ -57,21 +65,7 @@ namespace Server
             return Encoding.UTF8.GetString(bytesArray, 0, bytesRec);
         }
 
-        public void SendMessageToClient(string message)
-        {
-            TcpSocket.Bind(IpEndPoint);
-            TcpSocket.Listen(100);
-
-            socket = TcpSocket.Accept();
-
-            SendMessage(message);
-
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
-
-        }
-
-        public void SendMessage(string message)
+        private void SendMessage(string message)
         {
             byte[] messageByteArray = Encoding.UTF8.GetBytes(message);
 
