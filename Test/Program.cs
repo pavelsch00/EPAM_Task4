@@ -2,8 +2,7 @@
 using Server;
 using Client;
 using System.Threading;
-using System.Net.Sockets;
-using System.Net;
+
 
 namespace Test
 {
@@ -18,9 +17,8 @@ namespace Test
             myThread.Start();
             
             SocketServer socketServer = new SocketServer();
-            socketServer.StartServer();
-
-            Console.WriteLine("The End :(");
+            Console.WriteLine(socketServer.RecieveMessageFromClient());
+            Console.WriteLine(socketServer.ClientMessageDictionary.Values.Count);
         }
 
         private static void Count()
@@ -28,7 +26,7 @@ namespace Test
             SocketClient socketClient = new SocketClient();
             try
             {
-                socketClient.StartClient("Как прекрасен этот мир");
+                socketClient.SendMessageToServer("fsf");
             }
             catch (Exception ex)
             {

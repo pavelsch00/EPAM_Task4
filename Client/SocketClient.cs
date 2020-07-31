@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Client
 {
@@ -13,8 +12,6 @@ namespace Client
         private const string _localhost = "localhost";
 
         private const int _port = 11000;
-
-        private Action<string> TranslateMessage;
 
         private Dictionary<char, string> _dictionary = new Dictionary<char, string>
         {
@@ -87,13 +84,15 @@ namespace Client
             {' ', " "},
         };
 
+        public Action<string> _translateMessage;
+
         public SocketClient()
         {
             IpHost = Dns.GetHostEntry(_localhost);
             IpAddr = IpHost.AddressList[0];
             IpEndPoint = new IPEndPoint(IpAddr, _port);
-            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            TranslateMessage += (string message) =>
+
+            _translateMessage += (string message) =>
             {
                 message = message.ToLower();
 
@@ -118,29 +117,36 @@ namespace Client
 
         private void SendMessage(string message)
         {
-            TranslateMessage(message);
-
-            byte[] buffer = Encoding.UTF8.GetBytes(Message);
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
 
             if (!(Message == string.Empty))
                 TcpSocket.Send(buffer);
         }
 
-        public void StartClient()
+        public string ResiveMessageFromServer()
         {
-            TcpSocket.Connect(IpEndPoint);
+            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+            string serverResponse;
+
+            TcpSocket.Connect(IpEndPoint);
             var bytes = new byte[1024];
             int bytesRec = TcpSocket.Receive(bytes);
 
-            Console.WriteLine("Server response: {0}\n", Encoding.UTF8.GetString(bytes, 0, bytesRec));
+            serverResponse = Encoding.UTF8.GetString(bytes, 0, bytesRec);
+            _translateMessage(serverResponse);
 
             TcpSocket.Shutdown(SocketShutdown.Both);
             TcpSocket.Close();
+            return Message;
         }
 
-        public void StartClient(string mes)
+        public string SendMessageToServer(string mes)
         {
+            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            string serverResponse;
+
             TcpSocket.Connect(IpEndPoint);
 
             SendMessage(mes);
@@ -148,10 +154,12 @@ namespace Client
             var bytes = new byte[1024];
             int bytesRec = TcpSocket.Receive(bytes);
 
-            Console.WriteLine("Server response: {0}\n", Encoding.UTF8.GetString(bytes, 0, bytesRec));
+            serverResponse = Encoding.UTF8.GetString(bytes, 0, bytesRec);
 
             TcpSocket.Shutdown(SocketShutdown.Both);
             TcpSocket.Close();
+
+            return serverResponse;
         }
     }
 }
