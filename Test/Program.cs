@@ -13,37 +13,26 @@ namespace Test
 
         public static void Main(string[] args)
         {
-            SocketServer server = new SocketServer("127.0.0.1", 5000);
+            /*SocketServer server = new SocketServer("127.0.0.1", 5000);
+            MessageArchive messageArchive = new MessageArchive();
+            server.SubscribeToSaveMessages(delegate (TcpClient client, string message)
+            {
+                messageArchive.AddToRchive(client, message);
+            });
 
-            server.SubscribeToSaveMessages();
-
-            server.ChatStart();
-            server.StopServer();
-            /*
-            Thread myThread = new Thread(new ThreadStart(Count));
-            myThread.Start();
+            server.StartChat();
+            server.StopServer();*/
             
-            SocketServer socketServer = new SocketServer();
-            Console.WriteLine(socketServer.RecieveMessageFromClient());
-            Console.WriteLine(socketServer.ClientMessageDictionary.Values.Count);
-            */
-        }
+            SocketClient client = new SocketClient("127.0.0.1", 5000);
+            Translator translator = new Translator();
+            client.SubscribeToTransliteMessages(delegate (string message)
+            {
+                return translator.TranslateMessage(message);
+            });
 
-        private static void Count()
-        {
-            SocketClient socketClient = new SocketClient();
-            try
-            {
-                socketClient.SendMessageToServer("fsf");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-            finally
-            {
-                Console.ReadLine();
-            }
+            client.StartChat();
+            client.StopClient();
+
         }
     }
 }

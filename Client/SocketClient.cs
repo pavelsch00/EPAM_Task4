@@ -1,163 +1,74 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Client
 {
     public class SocketClient
     {
+        private Thread _messageWaitingThread;
 
-        private const string _localhost = "localhost";
+        private TcpClient _client;
 
-        private const int _port = 11000;
+        private NetworkStream _networkStream;
 
-        private Dictionary<char, string> _dictionary = new Dictionary<char, string>
+        public SocketClient(string ip, int port)
         {
-            {'а', "a"},
-            {'б', "b"},
-            {'в', "v"},
-            {'г', "g"},
-            {'д', "d"},
-            {'е', "e"},
-            {'ж', "zh"},
-            {'з', "z"},
-            {'и', "i"},
-            {'й', "i"},
-            {'к', "k"},
-            {'л', "l"},
-            {'м', "m"},
-            {'н', "n"},
-            {'о', "o"},
-            {'п', "p"},
-            {'р', "r"},
-            {'с', "s"},
-            {'т', "t"},
-            {'у', "u"},
-            {'ф', "f"},
-            {'х', "h"},
-            {'ц', "c"},
-            {'ч', "ch"},
-            {'ш', "sh"},
-            {'щ', "sh"},
-            {'ъ', ""},
-            {'ы', "i"},
-            {'ь', ""},
-            {'э', "e"},
-            {'ю', "yu"},
-            {'я', "ya"},
-            {'a', "а"},
-            {'b', "б"},
-            {'c', "ц"},
-            {'d', "д"},
-            {'e', "е"},
-            {'f', "ф"},
-            {'g', "г"},
-            {'h', "х"},
-            {'i', "и"},
-            {'j', "дж"},
-            {'k', "к"},
-            {'l', "л"},
-            {'m', "м"},
-            {'n', "н"},
-            {'o', "о"},
-            {'p', "п"},
-            {'q', "кв"},
-            {'r', "р"},
-            {'s', "с"},
-            {'t', "т"},
-            {'u', "у"},
-            {'v', "в"},
-            {'w', "в"},
-            {'x', "кс"},
-            {'y', "и"},
-            {'z', "з"},
-            {',', ","},
-            {'.', "."},
-            {'-', "-"},
-            {'_', "_"},
-            {'/', "/"},
-            {'\\', "\\"},
-            {'(', "("},
-            {')', ")"},
-            {' ', " "},
-        };
-
-        public Action<string> _translateMessage;
-
-        public SocketClient()
-        {
-            IpHost = Dns.GetHostEntry(_localhost);
-            IpAddr = IpHost.AddressList[0];
-            IpEndPoint = new IPEndPoint(IpAddr, _port);
-
-            _translateMessage += (string message) =>
-            {
-                message = message.ToLower();
-
-                for (int i = 0; i < message.Length; i++)
-                    message = message.Replace(message[i].ToString(), _dictionary[message[i]]);
-
-                Message = message;
-            };
+            _client = new TcpClient();
+            _client.Connect(ip, port);
+             _networkStream = _client.GetStream();
+            _messageWaitingThread = new Thread(ReceivingMessagesFromServer);
+            _messageWaitingThread.Start();
         }
 
-        private Socket TcpSocket { get; set; }
+        public delegate string ReceivingMessage(string message);
 
-        private IPHostEntry IpHost { get; set; }
+        public event ReceivingMessage TranslateMessage;
 
-        private IPAddress IpAddr { get; set; }
-
-        private IPEndPoint IpEndPoint { get; set; }
-
-        private string Message { get; set; }
-
-        private void SendMessage(string message)
+        private void SendMessageToServer(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
-            if (!(Message == string.Empty))
-                TcpSocket.Send(buffer);
+            _client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        public string ResiveMessageFromServer()
+        private void ReceivingMessagesFromServer()
         {
-            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            while (true)
+            {
+                var buffer = new byte[1024];
+                int byteCount = _networkStream.Read(buffer, 0, buffer.Length);
+                var destinationArray = new byte[byteCount];
 
-            string serverResponse;
+                Array.Copy(buffer, destinationArray, byteCount);
+                string message = Encoding.UTF8.GetString(destinationArray);
 
-            TcpSocket.Connect(IpEndPoint);
-            var bytes = new byte[1024];
-            int bytesRec = TcpSocket.Receive(bytes);
+                if(!(TranslateMessage == null))
+                    message = TranslateMessage.Invoke(message);
 
-            serverResponse = Encoding.UTF8.GetString(bytes, 0, bytesRec);
-            _translateMessage(serverResponse);
-
-            TcpSocket.Shutdown(SocketShutdown.Both);
-            TcpSocket.Close();
-            return Message;
+                Console.WriteLine(message);
+            }
         }
 
-        public string SendMessageToServer(string mes)
+        public void StartChat()
         {
-            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            string message;
 
-            string serverResponse;
-
-            TcpSocket.Connect(IpEndPoint);
-
-            SendMessage(mes);
-
-            var bytes = new byte[1024];
-            int bytesRec = TcpSocket.Receive(bytes);
-
-            serverResponse = Encoding.UTF8.GetString(bytes, 0, bytesRec);
-
-            TcpSocket.Shutdown(SocketShutdown.Both);
-            TcpSocket.Close();
-
-            return serverResponse;
+            while (true)
+                if (!string.IsNullOrEmpty(message = Console.ReadLine()))
+                    SendMessageToServer(message);
         }
+
+        public void StopClient()
+        {
+            _messageWaitingThread.Join();
+            _networkStream.Close();
+            _client.Close();
+        }
+
+        public void SubscribeToTransliteMessages(ReceivingMessage message) => TranslateMessage += message;
+
+        public void UnsubscribeNotToTransliteMessages(ReceivingMessage message) => TranslateMessage -= message;
     }
 }

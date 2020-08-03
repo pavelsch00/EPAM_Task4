@@ -13,10 +13,6 @@ namespace Server
 
         private Thread _clientWaitingThread;
 
-        private Action<TcpClient, string> ReceivingMessage;
-
-        private bool _isSubscribing;
-
         public SocketServer(string ip, int port)
         {
             Listener = new TcpListener(IPAddress.Parse(ip), port);
@@ -24,15 +20,15 @@ namespace Server
             Listener.Start();
             _clientWaitingThread = new Thread(WaitingForClientConnection);
             _clientWaitingThread.Start();
-            _isSubscribing = false;
-            MessageArchives = new MessageArchive();
         }
 
         private List<TcpClient> TcpClients { get; set; }
 
         private TcpListener Listener { get; set; }
 
-        public MessageArchive MessageArchives { get; private set; }
+        public delegate void ReceivingMessage(TcpClient client, string message);
+
+        public event ReceivingMessage AddMessageToArchive;
 
         private void SendMessageToAllClient(string message)
         {
@@ -63,40 +59,23 @@ namespace Server
             while (true)
             {
                 byte[] buffer = new byte[1024];
-                int byteCount;
+                int byteCount = networkStream.Read(buffer, 0, buffer.Length);
+                var destinationArray = new byte[byteCount];
 
-                try
-                {
-                    byteCount = networkStream.Read(buffer, 0, buffer.Length);
-                }
-                catch (System.IO.IOException)
-                {
-                    TcpClients.Remove(client);
-                    break;
-                }
+                Array.Copy(buffer, destinationArray, byteCount);
+                string message = Encoding.UTF8.GetString(destinationArray);
 
-                string message = Encoding.UTF8.GetString(buffer);
-
-                if (_isSubscribing)
-                    ReceivingMessage(client, message);
+                AddMessageToArchive?.Invoke(client, message);
 
                 Console.WriteLine(message);
             }
         }
 
-        public void SubscribeToSaveMessages()
-        {
-            ReceivingMessage += MessageArchives.AddMessageToArchive;
-            _isSubscribing = true;
-        }
+        public void SubscribeToSaveMessages(ReceivingMessage message) => AddMessageToArchive += message;
 
-        public void UnsubscribeNotToSaveMessages()
-        {
-            ReceivingMessage -= MessageArchives.AddMessageToArchive;
-            _isSubscribing = false;
-        }
+        public void UnsubscribeNotToSaveMessages(ReceivingMessage message) => AddMessageToArchive -= message;
 
-        public void ChatStart()
+        public void StartChat()
         {
             string message;
 
