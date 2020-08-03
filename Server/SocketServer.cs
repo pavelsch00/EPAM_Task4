@@ -3,94 +3,115 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Server
 {
     public class SocketServer
     {
-        private const string _localhost = "localhost";
+        private Thread _messageWaitingThread;
 
-        private const int _port = 11000;
+        private Thread _clientWaitingThread;
 
-        public Action<string, Socket> AddedMessageToClient;
+        private Action<TcpClient, string> ReceivingMessage;
 
-        public Dictionary<Socket, List<string>> ClientMessageDictionary { get; private set; }
+        private bool _isSubscribing;
 
-        public SocketServer()
+        public SocketServer(string ip, int port)
         {
-            IpHost = Dns.GetHostEntry(_localhost);
-            IpAddr = IpHost.AddressList[0];
-            IpEndPoint = new IPEndPoint(IpAddr, _port);
-            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            Listener = new TcpListener(IPAddress.Parse(ip), port);
+            TcpClients = new List<TcpClient>();
+            Listener.Start();
+            _clientWaitingThread = new Thread(WaitingForClientConnection);
+            _clientWaitingThread.Start();
+            _isSubscribing = false;
+            MessageArchives = new MessageArchive();
+        }
 
-            ClientMessageDictionary = new Dictionary<Socket, List<string>>();
+        private List<TcpClient> TcpClients { get; set; }
 
-            AddedMessageToClient += (string message, Socket ClientSocket) =>
+        private TcpListener Listener { get; set; }
+
+        public MessageArchive MessageArchives { get; private set; }
+
+        private void SendMessageToAllClient(string message)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
+
+            foreach (var client in TcpClients)
+                client.GetStream().Write(buffer, 0, buffer.Length);
+        }
+
+        private void WaitingForClientConnection()
+        {
+            while (true)
             {
-                if (!ClientMessageDictionary.ContainsKey(ClientSocket))
+                TcpClient client = Listener.AcceptTcpClient();
+                TcpClients.Add(client);
+
+                _messageWaitingThread = new Thread(ReceivingMessagesFromClient);
+                _messageWaitingThread.Start(client);
+            }
+        }
+
+        private void ReceivingMessagesFromClient(object obj)
+        {
+            var client = (TcpClient)obj;
+
+            NetworkStream networkStream = client.GetStream();
+
+            while (true)
+            {
+                byte[] buffer = new byte[1024];
+                int byteCount;
+
+                try
                 {
-                    var messageList = new List<string>();
-                    messageList.Add(message);
-                    ClientMessageDictionary.Add(ClientSocket, messageList);
+                    byteCount = networkStream.Read(buffer, 0, buffer.Length);
                 }
-                else
+                catch (System.IO.IOException)
                 {
-                    ClientMessageDictionary[ClientSocket].Add(message);
+                    TcpClients.Remove(client);
+                    break;
                 }
-            };
+
+                string message = Encoding.UTF8.GetString(buffer);
+
+                if (_isSubscribing)
+                    ReceivingMessage(client, message);
+
+                Console.WriteLine(message);
+            }
         }
 
-        private Socket TcpSocket { get; set; }
-
-        public Socket ClientSocket { get; set; }
-
-        private IPHostEntry IpHost { get; set; }
-
-        private IPAddress IpAddr { get; set; }
-
-        private IPEndPoint IpEndPoint { get; set; }
-
-        private string ReceivingMessage()
+        public void SubscribeToSaveMessages()
         {
-            var bytesArray = new byte[1024];
-
-            int bytesRec = ClientSocket.Receive(bytesArray);
-
-            return Encoding.UTF8.GetString(bytesArray, 0, bytesRec);
+            ReceivingMessage += MessageArchives.AddMessageToArchive;
+            _isSubscribing = true;
         }
 
-        private void SendMessage(string message)
+        public void UnsubscribeNotToSaveMessages()
         {
-            byte[] messageByteArray = Encoding.UTF8.GetBytes(message);
-
-            ClientSocket.Send(messageByteArray);
+            ReceivingMessage -= MessageArchives.AddMessageToArchive;
+            _isSubscribing = false;
         }
 
-        public string RecieveMessageFromClient()
+        public void ChatStart()
         {
-            TcpSocket = new Socket(IpAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            TcpSocket.Bind(IpEndPoint);
-            TcpSocket.Listen(100);
+            string message;
 
-            ClientSocket = TcpSocket.Accept();
-            string message = ReceivingMessage();
-            AddedMessageToClient(message, ClientSocket);
-
-            ClientSocket.Shutdown(SocketShutdown.Both);
-            ClientSocket.Close();
-            return message;
+            while (true)
+                if (!string.IsNullOrEmpty(message = Console.ReadLine()))
+                    SendMessageToAllClient(message);
         }
 
-        public void SendMessageToClient(string message)
+        public void StopServer()
         {
-            TcpSocket.Bind(IpEndPoint);
-            TcpSocket.Listen(100);
+            _messageWaitingThread.Join();
 
-            ClientSocket = TcpSocket.Accept();
-            SendMessage(message);
+            _clientWaitingThread.Join();
 
-            ClientSocket.Shutdown(SocketShutdown.Both);
-            ClientSocket.Close();
+            Listener.Stop();
         }
     }
 }

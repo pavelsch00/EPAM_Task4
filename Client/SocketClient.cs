@@ -97,9 +97,7 @@ namespace Client
                 message = message.ToLower();
 
                 for (int i = 0; i < message.Length; i++)
-                {
                     message = message.Replace(message[i].ToString(), _dictionary[message[i]]);
-                }
 
                 Message = message;
             };

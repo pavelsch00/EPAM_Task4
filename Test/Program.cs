@@ -2,7 +2,7 @@
 using Server;
 using Client;
 using System.Threading;
-
+using System.Net.Sockets;
 
 namespace Test
 {
@@ -13,12 +13,20 @@ namespace Test
 
         public static void Main(string[] args)
         {
+            SocketServer server = new SocketServer("127.0.0.1", 5000);
+
+            server.SubscribeToSaveMessages();
+
+            server.ChatStart();
+            server.StopServer();
+            /*
             Thread myThread = new Thread(new ThreadStart(Count));
             myThread.Start();
             
             SocketServer socketServer = new SocketServer();
             Console.WriteLine(socketServer.RecieveMessageFromClient());
             Console.WriteLine(socketServer.ClientMessageDictionary.Values.Count);
+            */
         }
 
         private static void Count()
