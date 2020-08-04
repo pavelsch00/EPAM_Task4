@@ -92,9 +92,9 @@ namespace Server
         /// <inheritdoc cref="ICore.Disconnect"/>
         public void Disconnect()
         {
-            messageWaitingThread.Join();
+            messageWaitingThread.Abort();
 
-            clientWaitingThread.Join();
+            clientWaitingThread.Abort();
 
             Listener.Stop();
         }

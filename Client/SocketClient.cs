@@ -32,7 +32,7 @@ namespace Client
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
-            client.GetStream().Write(buffer, 0, buffer.Length);
+            tcpClient.GetStream().Write(buffer, 0, buffer.Length);
         }
 
         /// <inheritdoc cref="ClientCore.ReceiveMessage"/>
@@ -73,9 +73,9 @@ namespace Client
         /// <inheritdoc cref="ICore.Disconnect"/>
         public void Disconnect()
         {
-            messageWaitingThread.Join();
+            messageWaitingThread.Abort();
             networkStream.Close();
-            client.Close();
+            tcpClient.Close();
         }
 
         /// <summary>

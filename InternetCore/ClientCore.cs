@@ -9,14 +9,14 @@ namespace InternetCore
     public abstract class ClientCore : Core
     {
         /// <summary>
-        /// The field stores information about TcpClient.
-        /// </summary>
-        protected readonly TcpClient client;
-
-        /// <summary>
         /// The field stores information about NetworkStream.
         /// </summary>
         protected readonly NetworkStream networkStream;
+
+        /// <summary>
+        /// The field stores information about TcpClient.
+        /// </summary>
+        public readonly TcpClient tcpClient;
 
         /// <summary>
         /// Constructor initializes client, networkStream and creates a thread waiting for messages.
@@ -25,9 +25,9 @@ namespace InternetCore
         /// <param name="port">string port</param>
         public ClientCore(string ip, int port) : base(ip, port)
         {
-            client = new TcpClient();
-            client.Connect(Ip, Port);
-            networkStream = client.GetStream();
+            tcpClient = new TcpClient();
+            tcpClient.Connect(Ip, Port);
+            networkStream = tcpClient.GetStream();
             messageWaitingThread = new Thread(ReceiveMessage);
             messageWaitingThread.Start();
         }
