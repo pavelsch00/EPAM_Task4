@@ -145,7 +145,7 @@ namespace Server
         public override int GetHashCode() => HashCode.Combine(Ip) * HashCode.Combine(Port);
 
         /// <summary>
-        /// The method returns information about the object in string form.
+        /// The method returns information about object in string form.
         /// </summary>
         /// <returns>string</returns>
         public override string ToString() => $"Ip: {Ip}, Port: {Port}\n";
