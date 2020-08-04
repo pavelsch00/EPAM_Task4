@@ -1,39 +1,27 @@
-﻿using System;
-using System.Net.Sockets;
+﻿using InternetCore;
+using System;
 using System.Text;
-using System.Threading;
 
 namespace Client
 {
-    public class SocketClient
+    public class SocketClient : ClientCore, ICore
     {
-        private Thread _messageWaitingThread;
+        private event ReceivingMessage Notification;
 
-        private TcpClient _client;
-
-        private NetworkStream _networkStream;
-
-        public SocketClient(string ip, int port)
+        public SocketClient(string ip, int port) : base(ip, port)
         {
-            _client = new TcpClient();
-            _client.Connect(ip, port);
-             _networkStream = _client.GetStream();
-            _messageWaitingThread = new Thread(ReceivingMessagesFromServer);
-            _messageWaitingThread.Start();
         }
 
         public delegate string ReceivingMessage(string message);
 
-        public event ReceivingMessage TranslateMessage;
-
-        private void SendMessageToServer(string message)
+        public void SendMessage(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
             _client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        private void ReceivingMessagesFromServer()
+        public override void ReceivingMessages()
         {
             while (true)
             {
@@ -44,8 +32,8 @@ namespace Client
                 Array.Copy(buffer, destinationArray, byteCount);
                 string message = Encoding.UTF8.GetString(destinationArray);
 
-                if(!(TranslateMessage == null))
-                    message = TranslateMessage.Invoke(message);
+                if(!(Notification == null))
+                    message = Notification.Invoke(message);
 
                 Console.WriteLine(message);
             }
@@ -57,18 +45,18 @@ namespace Client
 
             while (true)
                 if (!string.IsNullOrEmpty(message = Console.ReadLine()))
-                    SendMessageToServer(message);
+                    SendMessage(message);
         }
 
-        public void StopClient()
+        public void Disconnect()
         {
             _messageWaitingThread.Join();
             _networkStream.Close();
             _client.Close();
         }
 
-        public void SubscribeToTransliteMessages(ReceivingMessage message) => TranslateMessage += message;
+        public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
 
-        public void UnsubscribeNotToTransliteMessages(ReceivingMessage message) => TranslateMessage -= message;
+        public void UnsubscribeToReceivingMessage(ReceivingMessage message) => Notification -= message;
     }
 }

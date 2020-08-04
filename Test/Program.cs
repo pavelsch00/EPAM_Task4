@@ -25,13 +25,13 @@ namespace Test
             
             SocketClient client = new SocketClient("127.0.0.1", 5000);
             Translator translator = new Translator();
-            client.SubscribeToTransliteMessages(delegate (string message)
+            client.SubscribeToReceivingMessage(delegate (string message)
             {
                 return translator.TranslateMessage(message);
             });
 
             client.StartChat();
-            client.StopClient();
+            client.Disconnect();
 
         }
     }

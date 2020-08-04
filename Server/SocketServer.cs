@@ -28,7 +28,7 @@ namespace Server
 
         public delegate void ReceivingMessage(TcpClient client, string message);
 
-        public event ReceivingMessage AddMessageToArchive;
+        public event ReceivingMessage Notification;
 
         private void SendMessageToAllClient(string message)
         {
@@ -65,15 +65,17 @@ namespace Server
                 Array.Copy(buffer, destinationArray, byteCount);
                 string message = Encoding.UTF8.GetString(destinationArray);
 
-                AddMessageToArchive?.Invoke(client, message);
+                Notification?.Invoke(client, message);
 
                 Console.WriteLine(message);
             }
         }
 
-        public void SubscribeToSaveMessages(ReceivingMessage message) => AddMessageToArchive += message;
+        //recoment pls
+        public void SubscribeToSaveMessages(ReceivingMessage message) => Notification += message;
 
-        public void UnsubscribeNotToSaveMessages(ReceivingMessage message) => AddMessageToArchive -= message;
+        //recoment pls
+        public void UnsubscribeNotToSaveMessages(ReceivingMessage message) => Notification -= message;
 
         public void StartChat()
         {
