@@ -16,7 +16,7 @@ namespace InternetCore
         /// <summary>
         /// The field stores information about TcpClient.
         /// </summary>
-        public readonly TcpClient tcpClient;
+        protected readonly TcpClient tcpClient;
 
         /// <summary>
         /// Constructor initializes client, networkStream and creates a thread waiting for messages.
