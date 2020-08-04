@@ -4,8 +4,11 @@ using System.Text;
 
 namespace Client
 {
+
     public class SocketClient : ClientCore, ICore
     {
+        private const int _bufferSize = 1024;
+
         public SocketClient(string ip, int port) : base(ip, port)
         {
         }
@@ -23,7 +26,7 @@ namespace Client
         {
             while (true)
             {
-                var buffer = new byte[1024];
+                var buffer = new byte[_bufferSize];
                 int byteCount = networkStream.Read(buffer, 0, buffer.Length);
                 var destinationArray = new byte[byteCount];
 

@@ -8,6 +8,8 @@ namespace Server
 {
     public class SocketServer : ServerCore, ICore
     {
+        private const int _bufferSize = 1024;
+
         public SocketServer(string ip, int port) : base(ip, port)
         {
         }
@@ -34,7 +36,7 @@ namespace Server
 
             while (true)
             {
-                var buffer = new byte[1024];
+                var buffer = new byte[_bufferSize];
                 int byteCount = networkStream.Read(buffer, 0, buffer.Length);
                 var destinationArray = new byte[byteCount];
 
