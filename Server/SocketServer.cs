@@ -76,5 +76,38 @@ namespace Server
 
             Listener.Stop();
         }
+
+        /// <summary>
+        /// The method compares two objects for equivalence.
+        /// </summary>
+        /// <param name="obj">object</param>
+        /// <returns>True or False</returns>
+        public override bool Equals(object obj)
+        {
+            if (obj.GetType() != GetType())
+                return false;
+
+            SocketServer socketServer = (SocketServer)obj;
+
+            if (Ip != socketServer.Ip)
+                return false;
+
+            if (Port != socketServer.Port)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// The method gets the hash code of the object.
+        /// </summary>
+        /// <returns>HashCode</returns>
+        public override int GetHashCode() => HashCode.Combine(Ip) * HashCode.Combine(Port);
+
+        /// <summary>
+        /// The method returns information about the object in string form.
+        /// </summary>
+        /// <returns>string</returns>
+        public override string ToString() => $"Ip: {Ip}, Port: {Port}\n";
     }
 }
