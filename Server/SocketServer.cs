@@ -6,16 +6,27 @@ using System.Threading;
 
 namespace Server
 {
+    /// <summary>
+    /// The class organizes the tcp server work.
+    /// </summary>
     public class SocketServer : ServerCore, ICore
     {
+        /// <summary>
+        /// The field stores information about the size of the buffer.
+        /// </summary>
         private const int _bufferSize = 1024;
 
+        /// <inheritdoc cref="ServerCore(string, int)"/>
         public SocketServer(string ip, int port) : base(ip, port)
         {
         }
 
+        /// <summary>
+        /// The field warns about the event of a message arrival.
+        /// </summary>
         private event ReceivingMessage Notification;
 
+        /// <inheritdoc cref="ServerCore.WaitingForClientConnection"/>
         protected override void WaitingForClientConnection()
         {
             while (true)
@@ -28,6 +39,7 @@ namespace Server
             }
         }
 
+        /// <inheritdoc cref="ServerCore.ReceiveMessage"/>
         public override void ReceiveMessage(object obj)
         {
             var client = (TcpClient)obj;
@@ -49,6 +61,10 @@ namespace Server
             }
         }
 
+        /// <summary>
+        /// Method sent message for client.
+        /// </summary>
+        /// <param name="message">message</param>
         public void SendMessage(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
@@ -59,10 +75,7 @@ namespace Server
             }
         }
 
-        public void SubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification += eventHandler;
-
-        public void UnsubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification -= eventHandler;
-
+        /// <inheritdoc cref="ICore.StartChat"/>
         public void StartChat()
         {
             string message;
@@ -76,6 +89,7 @@ namespace Server
             }
         }
 
+        /// <inheritdoc cref="ICore.Disconnect"/>
         public void Disconnect()
         {
             messageWaitingThread.Join();
@@ -84,6 +98,18 @@ namespace Server
 
             Listener.Stop();
         }
+
+        /// <summary>
+        /// Method subscribes to event handling.
+        /// </summary>
+        /// <param name="eventHandler">delegate event handler</param>
+        public void SubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification += eventHandler;
+
+        /// <summary>
+        /// Method unsubscribes to event handling.
+        /// </summary>
+        /// <param name="eventHandler">delegate event handler</param>
+        public void UnsubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification -= eventHandler;
 
         /// <summary>
         /// The method compares two objects for equivalence.

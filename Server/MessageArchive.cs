@@ -4,15 +4,27 @@ using System.Net.Sockets;
 
 namespace Server
 {
+    /// <summary>
+    /// The class is intended for storing messages from tсp clients.
+    /// </summary>
     public class MessageArchive
     {
+        /// <summary>
+        /// Dictionary stores messages from tсp clients.
+        /// </summary>
         public Dictionary<TcpClient, List<string>> Archive { get; private set; }
 
+        /// <summary>
+        /// The constructor initializes the dictionary.
+        /// </summary>
         public MessageArchive()
         {
             Archive = new Dictionary<TcpClient, List<string>>();
         }
 
+        /// <summary>
+        /// The method adds a message from the client's tсp to the dictionary.
+        /// </summary>
         public void AddToRchive(TcpClient client, string message)
         {
             if (!Archive.ContainsKey(client))
