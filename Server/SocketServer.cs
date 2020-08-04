@@ -59,9 +59,9 @@ namespace Server
             }
         }
 
-        public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
+        public void SubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification += eventHandler;
 
-        public void UnsubscribeToReceivingMessage(ReceivingMessage message) => Notification -= message;
+        public void UnsubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification -= eventHandler;
 
         public void StartChat()
         {

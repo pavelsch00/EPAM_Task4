@@ -2,8 +2,14 @@
 
 namespace Client
 {
+    /// <summary>
+    /// The class is intended for translating a message into.
+    /// </summary>
     public class Translator
     {
+        /// <summary>
+        /// The dictionary stores letters and their translation.
+        /// </summary>
         private Dictionary<char, string> dictionary = new Dictionary<char, string>
         {
             {'а', "a"},
@@ -75,6 +81,10 @@ namespace Client
             {' ', " "},
         };
 
+        /// <summary>
+        /// The method translates the message into another language.
+        /// </summary>
+        /// <returns>translated message</returns>
         public string TranslateMessage(string message)
         {
             message = message.ToLower();

@@ -4,17 +4,30 @@ using System.Text;
 
 namespace Client
 {
-
+    /// <summary>
+    /// The class organizes the tcp client's work.
+    /// </summary>
     public class SocketClient : ClientCore, ICore
     {
+        /// <summary>
+        /// The field stores information about the size of the buffer.
+        /// </summary>
         private const int _bufferSize = 1024;
 
+        /// <inheritdoc cref="ClientCore(string, int)"/>
         public SocketClient(string ip, int port) : base(ip, port)
         {
         }
 
+        /// <summary>
+        /// The field warns about the event of a message arrival.
+        /// </summary>
         private event ReceivingMessage Notification;
 
+        /// <summary>
+        /// Method sent message for server.
+        /// </summary>
+        /// <param name="message">message</param>
         public void SendMessage(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
@@ -22,6 +35,7 @@ namespace Client
             client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
+        /// <inheritdoc cref="ClientCore.ReceiveMessage"/>
         public override void ReceiveMessage()
         {
             while (true)
@@ -42,6 +56,7 @@ namespace Client
             }
         }
 
+        /// <inheritdoc cref="ICore.StartChat"/>
         public void StartChat()
         {
             string message;
@@ -55,6 +70,7 @@ namespace Client
             }
         }
 
+        /// <inheritdoc cref="ICore.Disconnect"/>
         public void Disconnect()
         {
             messageWaitingThread.Join();
@@ -62,9 +78,17 @@ namespace Client
             client.Close();
         }
 
-        public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
+        /// <summary>
+        /// Method subscribes to event handling.
+        /// </summary>
+        /// <param name="eventHandler">delegate event handler</param>
+        public void SubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification += eventHandler;
 
-        public void UnsubscribeToReceivingMessage(ReceivingMessage message) => Notification -= message;
+        /// <summary>
+        /// Method unsubscribes to event handling.
+        /// </summary>
+        /// <param name="eventHandler">delegate event handler</param>
+        public void UnsubscribeToReceivingMessage(ReceivingMessage eventHandler) => Notification -= eventHandler;
 
         /// <summary>
         /// The method compares two objects for equivalence.
