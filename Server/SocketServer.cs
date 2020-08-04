@@ -1,36 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using InternetCore;
+using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
 namespace Server
 {
-    public class SocketServer
+    public class SocketServer : ServerCore, ICore
     {
-        private Thread _messageWaitingThread;
-
-        private Thread _clientWaitingThread;
-
-        public SocketServer(string ip, int port)
+        public SocketServer(string ip, int port) : base(ip, port)
         {
-            Listener = new TcpListener(IPAddress.Parse(ip), port);
-            TcpClients = new List<TcpClient>();
-            Listener.Start();
-            _clientWaitingThread = new Thread(WaitingForClientConnection);
-            _clientWaitingThread.Start();
         }
-
-        private List<TcpClient> TcpClients { get; set; }
-
-        private TcpListener Listener { get; set; }
-
-        public delegate void ReceivingMessage(TcpClient client, string message);
 
         public event ReceivingMessage Notification;
 
-        private void SendMessageToAllClient(string message)
+        public void SendMessage(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
@@ -38,19 +22,19 @@ namespace Server
                 client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        private void WaitingForClientConnection()
+        protected override void WaitingForClientConnection()
         {
             while (true)
             {
                 TcpClient client = Listener.AcceptTcpClient();
                 TcpClients.Add(client);
 
-                _messageWaitingThread = new Thread(ReceivingMessagesFromClient);
+                _messageWaitingThread = new Thread(ReceiveMessage);
                 _messageWaitingThread.Start(client);
             }
         }
 
-        private void ReceivingMessagesFromClient(object obj)
+        public override void ReceiveMessage(object obj)
         {
             var client = (TcpClient)obj;
 
@@ -71,11 +55,9 @@ namespace Server
             }
         }
 
-        //recoment pls
-        public void SubscribeToSaveMessages(ReceivingMessage message) => Notification += message;
+        public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
 
-        //recoment pls
-        public void UnsubscribeNotToSaveMessages(ReceivingMessage message) => Notification -= message;
+        public void UnsubscribeToReceivingMessage(ReceivingMessage message) => Notification -= message;
 
         public void StartChat()
         {
@@ -83,10 +65,10 @@ namespace Server
 
             while (true)
                 if (!string.IsNullOrEmpty(message = Console.ReadLine()))
-                    SendMessageToAllClient(message);
+                    SendMessage(message);
         }
 
-        public void StopServer()
+        public void Disconnect()
         {
             _messageWaitingThread.Join();
 

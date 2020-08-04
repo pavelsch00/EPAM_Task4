@@ -13,16 +13,16 @@ namespace Test
 
         public static void Main(string[] args)
         {
-            /*SocketServer server = new SocketServer("127.0.0.1", 5000);
+            SocketServer server = new SocketServer("127.0.0.1", 5000);
             MessageArchive messageArchive = new MessageArchive();
-            server.SubscribeToSaveMessages(delegate (TcpClient client, string message)
+            server.SubscribeToReceivingMessage(delegate (TcpClient client, string message)
             {
                 messageArchive.AddToRchive(client, message);
             });
 
             server.StartChat();
-            server.StopServer();*/
-            
+            server.Disconnect();
+            /*
             SocketClient client = new SocketClient("127.0.0.1", 5000);
             Translator translator = new Translator();
             client.SubscribeToReceivingMessage(delegate (string message)
@@ -32,7 +32,7 @@ namespace Test
 
             client.StartChat();
             client.Disconnect();
-
+            */
         }
     }
 }

@@ -12,8 +12,6 @@ namespace Client
         {
         }
 
-        public delegate string ReceivingMessage(string message);
-
         public void SendMessage(string message)
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
@@ -21,7 +19,7 @@ namespace Client
             _client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
-        public override void ReceivingMessages()
+        public override void ReceiveMessage()
         {
             while (true)
             {

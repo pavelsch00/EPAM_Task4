@@ -14,10 +14,12 @@ namespace InternetCore
             _client = new TcpClient();
             _client.Connect(Ip, Port);
             _networkStream = _client.GetStream();
-            _messageWaitingThread = new Thread(ReceivingMessages);
+            _messageWaitingThread = new Thread(ReceiveMessage);
             _messageWaitingThread.Start();
         }
 
-        public abstract void ReceivingMessages();
+        public delegate string ReceivingMessage(string message);
+
+        public abstract void ReceiveMessage();
     }
 }
