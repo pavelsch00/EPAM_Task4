@@ -6,11 +6,11 @@ namespace Client
 {
     public class SocketClient : ClientCore, ICore
     {
-        private event ReceivingMessage Notification;
-
         public SocketClient(string ip, int port) : base(ip, port)
         {
         }
+
+        private event ReceivingMessage Notification;
 
         public void SendMessage(string message)
         {
@@ -31,7 +31,9 @@ namespace Client
                 string message = Encoding.UTF8.GetString(destinationArray);
 
                 if(!(Notification == null))
+                {
                     message = Notification.Invoke(message);
+                }
 
                 Console.WriteLine(message);
             }
@@ -42,8 +44,12 @@ namespace Client
             string message;
 
             while (true)
+            {
                 if (!string.IsNullOrEmpty(message = Console.ReadLine()))
+                {
                     SendMessage(message);
+                }
+            }
         }
 
         public void Disconnect()

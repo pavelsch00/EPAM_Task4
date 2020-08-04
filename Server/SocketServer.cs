@@ -12,15 +12,7 @@ namespace Server
         {
         }
 
-        public event ReceivingMessage Notification;
-
-        public void SendMessage(string message)
-        {
-            byte[] buffer = Encoding.UTF8.GetBytes(message);
-
-            foreach (var client in TcpClients)
-                client.GetStream().Write(buffer, 0, buffer.Length);
-        }
+        private event ReceivingMessage Notification;
 
         protected override void WaitingForClientConnection()
         {
@@ -42,7 +34,7 @@ namespace Server
 
             while (true)
             {
-                byte[] buffer = new byte[1024];
+                var buffer = new byte[1024];
                 int byteCount = networkStream.Read(buffer, 0, buffer.Length);
                 var destinationArray = new byte[byteCount];
 
@@ -53,6 +45,14 @@ namespace Server
 
                 Console.WriteLine(message);
             }
+        }
+
+        public void SendMessage(string message)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(message);
+
+            foreach (var client in TcpClients)
+                client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
         public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
