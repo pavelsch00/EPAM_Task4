@@ -4,7 +4,7 @@ namespace InternetCore
 {
     public abstract class Core
     {
-        protected Thread _messageWaitingThread;
+        protected Thread messageWaitingThread;
 
         public Core(string ip, int port)
         {

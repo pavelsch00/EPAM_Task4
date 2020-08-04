@@ -35,12 +35,16 @@ namespace Server
         public override bool Equals(object obj)
         {
             if (obj.GetType() != GetType())
+            {
                 return false;
+            }
 
             MessageArchive messageArchive = (MessageArchive)obj;
 
             if (Archive != messageArchive.Archive)
+            {
                 return false;
+            }
 
             return true;
         }

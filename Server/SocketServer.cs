@@ -21,8 +21,8 @@ namespace Server
                 TcpClient client = Listener.AcceptTcpClient();
                 TcpClients.Add(client);
 
-                _messageWaitingThread = new Thread(ReceiveMessage);
-                _messageWaitingThread.Start(client);
+                messageWaitingThread = new Thread(ReceiveMessage);
+                messageWaitingThread.Start(client);
             }
         }
 
@@ -52,7 +52,9 @@ namespace Server
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
             foreach (var client in TcpClients)
+            {
                 client.GetStream().Write(buffer, 0, buffer.Length);
+            }
         }
 
         public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
@@ -64,15 +66,19 @@ namespace Server
             string message;
 
             while (true)
+            {
                 if (!string.IsNullOrEmpty(message = Console.ReadLine()))
+                {
                     SendMessage(message);
+                }
+            }
         }
 
         public void Disconnect()
         {
-            _messageWaitingThread.Join();
+            messageWaitingThread.Join();
 
-            _clientWaitingThread.Join();
+            clientWaitingThread.Join();
 
             Listener.Stop();
         }
@@ -85,15 +91,21 @@ namespace Server
         public override bool Equals(object obj)
         {
             if (obj.GetType() != GetType())
+            {
                 return false;
+            }
 
             SocketServer socketServer = (SocketServer)obj;
 
             if (Ip != socketServer.Ip)
+            {
                 return false;
+            }
 
             if (Port != socketServer.Port)
+            {
                 return false;
+            }
 
             return true;
         }

@@ -5,17 +5,17 @@ namespace InternetCore
 {
     public abstract class ClientCore : Core
     {
-        protected readonly TcpClient _client;
+        protected readonly TcpClient client;
 
-        protected readonly NetworkStream _networkStream;
+        protected readonly NetworkStream networkStream;
 
         public ClientCore(string ip, int port) : base(ip, port)
         {
-            _client = new TcpClient();
-            _client.Connect(Ip, Port);
-            _networkStream = _client.GetStream();
-            _messageWaitingThread = new Thread(ReceiveMessage);
-            _messageWaitingThread.Start();
+            client = new TcpClient();
+            client.Connect(Ip, Port);
+            networkStream = client.GetStream();
+            messageWaitingThread = new Thread(ReceiveMessage);
+            messageWaitingThread.Start();
         }
 
         public delegate string ReceivingMessage(string message);

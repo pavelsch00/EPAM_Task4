@@ -16,7 +16,7 @@ namespace Client
         {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
 
-            _client.GetStream().Write(buffer, 0, buffer.Length);
+            client.GetStream().Write(buffer, 0, buffer.Length);
         }
 
         public override void ReceiveMessage()
@@ -24,7 +24,7 @@ namespace Client
             while (true)
             {
                 var buffer = new byte[1024];
-                int byteCount = _networkStream.Read(buffer, 0, buffer.Length);
+                int byteCount = networkStream.Read(buffer, 0, buffer.Length);
                 var destinationArray = new byte[byteCount];
 
                 Array.Copy(buffer, destinationArray, byteCount);
@@ -54,9 +54,9 @@ namespace Client
 
         public void Disconnect()
         {
-            _messageWaitingThread.Join();
-            _networkStream.Close();
-            _client.Close();
+            messageWaitingThread.Join();
+            networkStream.Close();
+            client.Close();
         }
 
         public void SubscribeToReceivingMessage(ReceivingMessage message) => Notification += message;
@@ -71,15 +71,21 @@ namespace Client
         public override bool Equals(object obj)
         {
             if (obj.GetType() != GetType())
+            {
                 return false;
+            }
 
             SocketClient socketClient = (SocketClient)obj;
 
             if (Ip != socketClient.Ip)
+            {
                 return false;
+            }
 
             if (Port != socketClient.Port)
+            {
                 return false;
+            }
 
             return true;
         }

@@ -7,15 +7,15 @@ namespace InternetCore
 {
     public abstract class ServerCore : Core
     {
-        protected Thread _clientWaitingThread;
+        protected Thread clientWaitingThread;
 
         public ServerCore(string ip, int port) : base(ip, port)
         {
             Listener = new TcpListener(IPAddress.Parse(ip), port);
             TcpClients = new List<TcpClient>();
             Listener.Start();
-            _clientWaitingThread = new Thread(WaitingForClientConnection);
-            _clientWaitingThread.Start();
+            clientWaitingThread = new Thread(WaitingForClientConnection);
+            clientWaitingThread.Start();
         }
 
         public delegate void ReceivingMessage(TcpClient client, string message);

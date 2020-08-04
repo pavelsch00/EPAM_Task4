@@ -4,7 +4,7 @@ namespace Client
 {
     public class Translator
     {
-        private Dictionary<char, string> _dictionary = new Dictionary<char, string>
+        private Dictionary<char, string> dictionary = new Dictionary<char, string>
         {
             {'а', "a"},
             {'б', "b"},
@@ -80,7 +80,7 @@ namespace Client
             message = message.ToLower();
 
             for (int i = 0; i < message.Length; i++)
-                message = message.Replace(message[i].ToString(), _dictionary[message[i]]);
+                message = message.Replace(message[i].ToString(), dictionary[message[i]]);
 
             return message;
         }
